@@ -27,6 +27,8 @@ import com.onesignal.notifications.INotificationReceivedEvent;
 import com.onesignal.user.subscriptions.IPushSubscription;
 import com.onesignal.user.subscriptions.PushSubscriptionState;
 import com.onesignal.user.subscriptions.PushSubscriptionChangedState;
+import com.onesignal.user.state.UserState;
+import com.onesignal.user.state.UserChangedState;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -182,10 +184,36 @@ public class RNUtils {
 
     public static HashMap<String, Object> convertPushSubscriptionStateToMap(PushSubscriptionState state) {
         HashMap<String, Object> hash = new HashMap<>();
-
-        hash.put("token", state.getToken());
-        hash.put("id", state.getId());
+        if (state.getToken() != null && !state.getToken().isEmpty()) {
+            hash.put("token", state.getToken());
+        } else {
+            hash.put("token", JSONObject.NULL);
+        }
+        if (state.getId() != null && !state.getId().isEmpty()) {
+            hash.put("id", state.getId());
+        } else {
+            hash.put("id", JSONObject.NULL); 
+        }
         hash.put("optedIn", state.getOptedIn());
+
+        return hash;
+    }
+
+    public static HashMap<String, Object> convertUserStateToMap(UserState user) {
+        HashMap<String, Object> hash = new HashMap<>();
+
+        if (user.getExternalId() != null && !user.getExternalId().isEmpty()) {
+            hash.put("externalId", user.getExternalId());
+        }
+        else {
+            hash.put("externalId", JSONObject.NULL);
+        }
+        if (user.getOnesignalId() != null && !user.getOnesignalId().isEmpty()) {
+            hash.put("onesignalId", user.getOnesignalId());
+        }
+        else {
+            hash.put("onesignalId", JSONObject.NULL);
+        }
 
         return hash;
     }
@@ -194,6 +222,13 @@ public class RNUtils {
         HashMap<String, Object> hash = new HashMap<>();
         hash.put("current", convertPushSubscriptionStateToMap(state.getCurrent()));
         hash.put("previous", convertPushSubscriptionStateToMap(state.getPrevious()));
+
+        return hash;
+    }
+
+    public static HashMap<String, Object> convertUserChangedStateToMap(UserChangedState state) {
+        HashMap<String, Object> hash = new HashMap<>();
+        hash.put("current", convertUserStateToMap(state.getCurrent()));
 
         return hash;
     }

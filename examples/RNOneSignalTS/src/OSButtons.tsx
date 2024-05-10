@@ -133,8 +133,8 @@ class OSButtons extends React.Component<Props> {
 
     const hasPermissionButton = renderButtonView(
       'Has Notification Permission',
-      () => {
-        const granted = OneSignal.Notifications.hasPermission();
+      async () => {
+        const granted = await OneSignal.Notifications.getPermissionAsync();
         loggingFunction(`Has Notification Permission: ${granted}`);
       },
     );
@@ -276,6 +276,11 @@ class OSButtons extends React.Component<Props> {
       OneSignal.User.removeTags(['my_tag1', 'my_tag2']);
     });
 
+    const getTagsButton = renderButtonView('Get tags', async () => {
+      const tags = await OneSignal.User.getTags();
+      loggingFunction('Tags:', tags);
+    });
+
     const setLanguageButton = renderButtonView('Set Language', () => {
       loggingFunction(
         'Attempting to set language: ',
@@ -337,6 +342,22 @@ class OSButtons extends React.Component<Props> {
       },
     );
 
+    const getOnesignalIdButton = renderButtonView(
+      'Get OneSignal Id',
+      async () => {
+        const onesignalId = await OneSignal.User.getOnesignalId();
+        loggingFunction('OneSignal Id: ', onesignalId);
+      },
+    );
+
+    const getExternalIdButton = renderButtonView(
+      'Get External Id',
+      async () => {
+        const externalId = await OneSignal.User.getExternalId();
+        loggingFunction('External Id:', externalId);
+      },
+    );
+
     return [
       loginButton,
       logoutButton,
@@ -346,6 +367,7 @@ class OSButtons extends React.Component<Props> {
       deleteTagWithKeyButton,
       addTagsButton,
       removeTagsButton,
+      getTagsButton,
       setLanguageButton,
       addSmsButton,
       removeSmsButton,
@@ -353,6 +375,8 @@ class OSButtons extends React.Component<Props> {
       removeAliasButton,
       addAliasesButton,
       removeAliasesButton,
+      getOnesignalIdButton,
+      getExternalIdButton,
     ];
   }
 
@@ -362,8 +386,7 @@ class OSButtons extends React.Component<Props> {
     const getPushSubscriptionIdButton = renderButtonView(
       'Get Push Subscription Id',
       async () => {
-        const id =
-          await OneSignal.User.pushSubscription.getPushSubscriptionId();
+        const id = await OneSignal.User.pushSubscription.getIdAsync();
         loggingFunction('Push Subscription Id: ', id);
       },
     );
@@ -371,14 +394,13 @@ class OSButtons extends React.Component<Props> {
     const getPushSubscriptionTokenButton = renderButtonView(
       'Get Push Subscription Token',
       async () => {
-        const token =
-          await OneSignal.User.pushSubscription.getPushSubscriptionToken();
+        const token = await OneSignal.User.pushSubscription.getTokenAsync();
         loggingFunction('Push Subscription Token: ', token);
       },
     );
 
     const getOptedInButton = renderButtonView('Is Opted In', async () => {
-      const optedIn = await OneSignal.User.pushSubscription.getOptedIn();
+      const optedIn = await OneSignal.User.pushSubscription.getOptedInAsync();
       loggingFunction('Subscribed for the push notifications: ', optedIn);
     });
 

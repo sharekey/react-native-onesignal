@@ -9,8 +9,9 @@
     BOOL _hasListeners;
     BOOL _hasSetSubscriptionObserver;
     BOOL _hasSetPermissionObserver;
+    BOOL _hasSetUserStateObserver;
     BOOL _hasAddedNotificationClickListener;
-    BOOL _hasAddedNotificationLifecycleListener;
+    BOOL _hasAddedNotificationForegroundLifecycleListener;
     BOOL _hasAddedInAppMessageClickListener;
     BOOL _hasAddedInAppMessageLifecycleListener;
     NSMutableDictionary* _preventDefaultCache;
@@ -264,7 +265,10 @@ RCT_EXPORT_METHOD(addNotificationClickListener) {
 }
 
 RCT_EXPORT_METHOD(addNotificationForegroundLifecycleListener) {
-    [OneSignal.Notifications addForegroundLifecycleListener:self];
+    if (!_hasAddedNotificationForegroundLifecycleListener) {
+        [OneSignal.Notifications addForegroundLifecycleListener:self];
+        _hasAddedNotificationForegroundLifecycleListener = true;
+    }
 }
 
 RCT_EXPORT_METHOD(onWillDisplayNotification:(OSNotificationWillDisplayEvent *)event){
@@ -307,6 +311,13 @@ RCT_EXPORT_METHOD(addOutcomeWithValue:(NSString *)name :(NSNumber * _Nonnull)val
 }
 
 // OneSignal.User namespace methods
+RCT_EXPORT_METHOD(addUserStateObserver) {
+    if (!_hasSetUserStateObserver) {
+        [OneSignal.User addObserver:[RCTOneSignal sharedInstance]];
+        _hasSetUserStateObserver = true;
+    }
+}
+
 RCT_EXPORT_METHOD(addPushSubscriptionObserver) {
     if (!_hasSetSubscriptionObserver) {
         [OneSignal.User.pushSubscription addObserver:[RCTOneSignal sharedInstance]];
@@ -341,7 +352,7 @@ RCT_EXPORT_METHOD(removeSms:(NSString *)smsNumber) {
     [OneSignal.User removeSms:smsNumber]; 
 }
 
-RCT_EXPORT_METHOD(addTag:(NSString *)key value:(NSString*)value) {
+RCT_EXPORT_METHOD(addTag:(NSString *)key value:(id)value) {
     [OneSignal.User addTagWithKey:key value:value];
 }
 
@@ -355,6 +366,35 @@ RCT_EXPORT_METHOD(removeTag:(NSString *)key) {
 
 RCT_EXPORT_METHOD(removeTags:(NSArray *)keys) {
     [OneSignal.User removeTags:keys];
+}
+
+RCT_EXPORT_METHOD(getTags:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject) {
+    NSDictionary<NSString *, NSString *> *tags = [OneSignal.User getTags];
+    resolve(tags);
+}
+
+RCT_REMAP_METHOD(getOnesignalId,
+                 getOnesignalIdResolver:(RCTPromiseResolveBlock)resolve
+                 rejecter:(RCTPromiseRejectBlock)reject) {
+    NSString *onesignalId = OneSignal.User.onesignalId;
+    
+    if (onesignalId == nil || [onesignalId length] == 0) {
+        resolve([NSNull null]); // Resolve with null if nil or empty
+    } else {
+        resolve(onesignalId);
+    }
+}
+
+RCT_REMAP_METHOD(getExternalId,
+                 getExternalIdResolver:(RCTPromiseResolveBlock)resolve
+                 rejecter:(RCTPromiseRejectBlock)reject) {
+    NSString *externalId = OneSignal.User.externalId;
+    
+    if (externalId == nil || [externalId length] == 0) {
+        resolve([NSNull null]); // Resolve with null if nil or empty
+    } else {
+        resolve(externalId);
+    }
 }
 
 RCT_EXPORT_METHOD(addAlias:(NSString *)label :(NSString *)id) {
@@ -384,13 +424,23 @@ RCT_REMAP_METHOD(getOptedIn,
 RCT_REMAP_METHOD(getPushSubscriptionId, 
                  getPushSubscriptionIdResolver:(RCTPromiseResolveBlock)resolve
                  rejecter:(RCTPromiseRejectBlock)reject) {
-    resolve(OneSignal.User.pushSubscription.id);
+    NSString *pushId = OneSignal.User.pushSubscription.id;
+    if (pushId && ![pushId isEqualToString:@""]) {
+        resolve(pushId);
+    } else {
+        resolve([NSNull null]);
+    }
 }
 
 RCT_REMAP_METHOD(getPushSubscriptionToken, 
                  getPushSubscriptionTokenResolver:(RCTPromiseResolveBlock)resolve
                  rejecter:(RCTPromiseRejectBlock)reject) {
-    resolve(OneSignal.User.pushSubscription.token);
+    NSString *token = OneSignal.User.pushSubscription.token;
+    if (token && ![token isEqualToString:@""]) {
+        resolve(token);
+    } else {
+        resolve([NSNull null]);
+    }
 }
 
 RCT_EXPORT_METHOD(optIn) {
